@@ -7,22 +7,24 @@ from std_msgs.msg import Int32
 # Initialize ROS node
 rospy.init_node('joy_to_motor_control')
 
-# Initialize motor speeds
+# Initialize motor speeds and button state
 speed1 = 0
 speed2 = 0
-button=0
+button_pressed = False
 
 # Define callback function for joystick input
 def joy_callback(data):
-    global speed1, speed2,button
-    # Assuming axes 0 and 1 correspond to left-right and up-down movement of joystick
-    button=data.axes[5]  
+    global speed1, speed2, button_pressed
+    button_pressed = data.buttons[5]
+    
+    # Map joystick axes to motor speeds
+    x_axis = data.axes[0]  
+    y_axis = data.axes[1] 
+    
+    # Calculate motor speeds based on joystick axes
+    speed1 = int(150 * (y_axis + x_axis))  
+    speed2 = int(150 * (y_axis - x_axis))  
 
-    speed1 = int(data.axes[0] )  # Map joystick Y-axis to motor speed
-    speed2 = int(data.axes[1] )   # Map joystick X-axis to motor speed
-    
-  
-    
 # Subscribe to joystick topic
 rospy.Subscriber("joy", Joy, joy_callback)
 
@@ -31,13 +33,15 @@ motor_cmd_pub = rospy.Publisher('motor_commands', Int32, queue_size=10)
 
 # Main loop
 def main_loop():
-    global speed1, speed2,button
+    global speed1, speed2, button_pressed
     rate = rospy.Rate(10)  # 10 Hz
     while not rospy.is_shutdown():
-        # Publish motor speeds
-        if button:
+        
+        if button_pressed:
             motor_cmd_pub.publish(Int32(speed1))
             motor_cmd_pub.publish(Int32(speed2))
+        else:
+            motor_cmd_pub.publish(Int32(0)) 
         rate.sleep()
 
 if __name__ == '__main__':
@@ -45,3 +49,4 @@ if __name__ == '__main__':
         main_loop()
     except rospy.ROSInterruptException:
         pass
+

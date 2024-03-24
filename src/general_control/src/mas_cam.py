@@ -13,7 +13,7 @@ curses.cbreak()
 stdscr.keypad(True)
 
 # Initialize pan and tilt angles
-pan_angle = 90
+pan_angle = 0
 tilt_angle = 90
 
 # Publisher for pan-tilt angles
